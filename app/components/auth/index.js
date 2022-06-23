@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import AuthForm from './authForm';
 import AuthLogo from './authLogo';
-
+import {getTokens} from '../../utils/misc'
 class AuthComponent extends Component {
   state = {
     loading: false,
@@ -17,6 +17,10 @@ class AuthComponent extends Component {
   goWithoutLogin = () => {
     this.props.navigation.navigate('AppTapCompoment');
   };
+
+  componentDidMount(){
+    getTokens();
+  }
 
   render() {
     if (this.state.loading) {
