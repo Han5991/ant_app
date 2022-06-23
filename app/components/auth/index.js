@@ -14,6 +14,10 @@ class AuthComponent extends Component {
     loading: false,
   };
 
+  goWithoutLogin = () => {
+    this.props.navigation.navigate('AppTapCompoment');
+  };
+
   render() {
     if (this.state.loading) {
       return (
@@ -26,7 +30,7 @@ class AuthComponent extends Component {
         <ScrollView style={styles.container}>
           <View>
             <AuthLogo />
-            <AuthForm />
+            <AuthForm goWithoutLogin={this.goWithoutLogin} />
           </View>
         </ScrollView>
       );
@@ -46,8 +50,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#7487C5',
     paddingTop: 130,
     paddingRight: 50,
-    paddingLeft:50
-  }
+    paddingLeft: 50,
+  },
 });
 
 export default AuthComponent;

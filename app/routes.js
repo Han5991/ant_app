@@ -30,7 +30,10 @@ export const RootNavigator = () => {
       {isLoggedIn ? (
         <AuthStack.Screen name="Main" component={AppTapCompoment} />
       ) : (
-        <AuthStack.Screen name="SignIn" component={SignIn} />
+        <>
+          <AuthStack.Screen name="SignIn" component={SignIn} />
+          <AuthStack.Screen name="AppTapCompoment" component={AppTapCompoment} />
+        </>
       )}
     </AuthStack.Navigator>
   );
