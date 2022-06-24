@@ -8,7 +8,6 @@ const setTokens = async (values, callBack) => {
   const firstPair = ['@ant_app@userId', values.userId];
   const secondPair = ['@ant_app@token', values.token];
   const thirdPair = ['@ant_app@refToken', values.refToken];
-  console.log('setTokens', values);
   try {
     await AsyncStorage.multiSet([firstPair, secondPair, thirdPair]).then(
       response => {
@@ -20,7 +19,7 @@ const setTokens = async (values, callBack) => {
   }
 };
 
-const getTokens = async () => {
+const getTokens = async callBack => {
   let values;
 
   try {
@@ -28,12 +27,12 @@ const getTokens = async () => {
       '@ant_app@userId',
       '@ant_app@token',
       '@ant_app@refToken',
-    ]);
+    ]).then(values => {
+      callBack(values);
+    });
   } catch (e) {
     // read error
   }
-
-  console.log('va', values);
 };
 
 const removeTokens = async callBack => {

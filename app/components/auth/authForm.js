@@ -1,12 +1,5 @@
 import React, {Component} from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TextInput,
-  Button,
-  Platform,
-} from 'react-native';
+import {Button, Platform, StyleSheet, Text, View,} from 'react-native';
 import Input from '../../utils/forms/input';
 import {validation} from '../../utils/forms/validationRules';
 import {connect} from 'react-redux';
@@ -58,13 +51,11 @@ class AuthForm extends Component {
 
     formCopy[name].value = value;
     let rules = formCopy[name].rules;
-    let valid = validation(value, rules, formCopy);
-    formCopy[name].valid = valid;
+    formCopy[name].valid = validation(value, rules, formCopy);
 
     this.setState({
       form: formCopy,
     });
-    // console.warn('updateInput', JSON.stringify(this.state.form));
   };
 
   confirmPassword = () =>
@@ -129,14 +120,11 @@ class AuthForm extends Component {
   };
 
   manageAccess = () => {
-    console.log('man');
-    if (!this.props.auth.userId) {
-      console.log('ok');
+    if (!this.props.User.auth.userId) {
       this.setState({
         hasErrors: true,
       });
     } else {
-      console.log('no');
       setTokens(this.props.User.auth, () => {
         this.setState({
           hasErrors: false,

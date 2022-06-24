@@ -1,9 +1,31 @@
 import Axios from 'axios';
-import {SIGNUP, SIGNIN} from '../../utils/misc';
-import {SIGN_IN, SIGN_UP} from '../types';
+import {SIGNUP, SIGNIN, REFRESH} from '../../utils/misc';
+import {SIGN_IN, SIGN_UP, AUTO_SIGN_IN} from '../types';
 
-export function signIn(data) {
+
+export const autoSignIn= (refToken) => {
   const request = Axios({
+      method: 'POST',
+      url: REFRESH,
+      data: "grant_type=refresh_token&refresh_token="+refToken,
+      header: {
+          "Content-Type":"application/x-www-form-urlencoded"
+      }
+  }).then(response=>{
+      return response.data
+  }).catch(err=>{
+      alert("에러 발생")
+      return false
+  })
+
+  return {
+    type: AUTO_SIGN_IN,
+    payload: request,
+  };
+}
+
+export async function signIn(data) {
+  const request = await Axios({
     method: 'POST',
     url: SIGNIN,
     data: {
@@ -23,7 +45,6 @@ export function signIn(data) {
       alert('에러 발생');
       return false;
     });
-
   return {
     type: SIGN_IN,
     payload: request,
@@ -51,7 +72,6 @@ export function signUp(data) {
       alert('에러 발생');
       return false;
     });
-  console.log('requset', request);
   return {
     type: SIGN_UP,
     payload: request,

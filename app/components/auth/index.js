@@ -1,14 +1,12 @@
 import React, {Component} from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  ActivityIndicator,
-  ScrollView,
-} from 'react-native';
+import {StyleSheet, View, ActivityIndicator, ScrollView} from 'react-native';
 import AuthForm from './authForm';
 import AuthLogo from './authLogo';
-import {getTokens} from '../../utils/misc'
+import {getTokens, setTokens} from '../../utils/misc'
+import { autoSignIn } from '../../store/actions/user_actions';
+import { connect } from 'react-redux';
+import {bindActionCreators} from 'redux';
+
 class AuthComponent extends Component {
   state = {
     loading: false,
@@ -18,8 +16,23 @@ class AuthComponent extends Component {
     this.props.navigation.navigate('AppTapCompoment');
   };
 
-  componentDidMount(){
-    getTokens();
+  componentDidMount() {
+    getTokens((value)=> {
+      if(value[1][1] === null){
+        this.setState({loading: false});
+      }else{
+        this.props.autoSignIn(value[2][1]).then(() => {
+          if (!this.props.User.auth.token) {
+            this.setState({loading: false});
+          } else {
+            setTokens(this.props.User.auth, () => {
+              this.goWithoutLogin();
+            });
+          }
+        });
+      }
+      console.log('getTokens', value);
+    });
   }
 
   render() {
@@ -58,4 +71,14 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AuthComponent;
+function mapStateToProps(state){
+  return {
+    User: state.User,
+  };
+}
+
+function mapDispatchToProps(dispatch){
+  return bindActionCreators({autoSignIn}, dispatch);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(AuthComponent);
