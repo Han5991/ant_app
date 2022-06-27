@@ -10,7 +10,6 @@ import {createStore, applyMiddleware, compose} from 'redux';
 import {Provider} from 'react-redux';
 import promiseMiddleware from 'redux-promise';
 import reducers from './app/store/reducers';
-
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 const createStoreWithMiddleware = createStore(
@@ -20,7 +19,7 @@ const createStoreWithMiddleware = createStore(
 
 const appRedux = () => (
   <Provider store={createStoreWithMiddleware}>
-    <App/>
+    <App />
   </Provider>
 );
 

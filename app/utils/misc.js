@@ -3,6 +3,24 @@ export const SIGNUP = `https://identitytoolkit.googleapis.com/v1/accounts:signUp
 export const SIGNIN = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${APIKEY}`;
 export const REFRESH = `https://securetoken.googleapis.com/v1/token?key=${APIKEY}`;
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import firebase from 'firebase';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDNM8kPBFUkXeLk7O_nvols98KYOQpoxHM",
+  authDomain: "superjoin-admin-test.firebaseapp.com",
+  databaseURL: "https://superjoin-admin-test-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "superjoin-admin-test",
+  storageBucket: "superjoin-admin-test.appspot.com",
+  messagingSenderId: "450612815386",
+  appId: "1:450612815386:web:69f2ac4cb79141b53d93a3",
+  measurementId: "G-B3QGYY51M7"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+export const storage = firebase.storage();
+export const database = firebase.database();
+export const auth = firebase.auth();
 
 const setTokens = async (values, callBack) => {
   const firstPair = ['@ant_app@userId', values.userId];
