@@ -1,11 +1,12 @@
 import React, {Component} from 'react';
-import {Button, Platform, StyleSheet, Text, View,} from 'react-native';
+import {Button, Platform, StyleSheet, Text, View} from 'react-native';
 import Input from '../../utils/forms/input';
 import {validation} from '../../utils/forms/validationRules';
 import {connect} from 'react-redux';
 import {signIn, signUp} from '../../store/actions/user_actions';
 import {bindActionCreators} from 'redux';
 import {setTokens} from '../../utils/misc';
+import {TouchableOpacity} from 'react-native-gesture-handler';
 
 class AuthForm extends Component {
   state = {
@@ -129,7 +130,7 @@ class AuthForm extends Component {
         this.setState({
           hasErrors: false,
         }),
-          this.props.goWithoutLogin();
+          this.props.navigation.push('AppTapCompoment');
       });
     }
   };

@@ -2,56 +2,43 @@ import React, {Component} from 'react';
 import {StyleSheet, View, ActivityIndicator, ScrollView} from 'react-native';
 import AuthForm from './authForm';
 import AuthLogo from './authLogo';
-import {getTokens, setTokens} from '../../utils/misc'
-import { autoSignIn } from '../../store/actions/user_actions';
-import { connect } from 'react-redux';
+import {getTokens, setTokens} from '../../utils/misc';
+import {autoSignIn} from '../../store/actions/user_actions';
+import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 
 class AuthComponent extends Component {
-  state = {
-    loading: false,
-  };
-
   goWithoutLogin = () => {
     this.props.navigation.navigate('AppTapCompoment');
   };
 
   componentDidMount() {
-    getTokens((value)=> {
-      if(value[1][1] === null){
-        this.setState({loading: false});
-      }else{
+    getTokens(value => {
+      if (value[1][1] !== null) {
         this.props.autoSignIn(value[2][1]).then(() => {
-          if (!this.props.User.auth.token) {
-            this.setState({loading: false});
-          } else {
+          if (this.props.User.auth.token) {
             setTokens(this.props.User.auth, () => {
               this.goWithoutLogin();
             });
           }
         });
       }
-      console.log('getTokens', value);
+    });
+
+    this.props.navigation.addListener('beforRemove', e => {
+      e.preventDefalt();
     });
   }
 
   render() {
-    if (this.state.loading) {
-      return (
-        <View style={styles.loading}>
-          <ActivityIndicator />
+    return (
+      <ScrollView style={styles.container}>
+        <View>
+          <AuthLogo />
+          <AuthForm goWithoutLogin={this.goWithoutLogin} />
         </View>
-      );
-    } else {
-      return (
-        <ScrollView style={styles.container}>
-          <View>
-            <AuthLogo />
-            <AuthForm goWithoutLogin={this.goWithoutLogin} />
-          </View>
-        </ScrollView>
-      );
-    }
+      </ScrollView>
+    );
   }
 }
 
@@ -71,13 +58,13 @@ const styles = StyleSheet.create({
   },
 });
 
-function mapStateToProps(state){
+function mapStateToProps(state) {
   return {
     User: state.User,
   };
 }
 
-function mapDispatchToProps(dispatch){
+function mapDispatchToProps(dispatch) {
   return bindActionCreators({autoSignIn}, dispatch);
 }
 

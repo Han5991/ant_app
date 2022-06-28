@@ -11,12 +11,14 @@ import News from './components/news';
 import DiaryDocu from './components/diary/diaryDocu';
 import Logo from './utils/logo';
 
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+import Loading from './components/auth/loading';
+
 const MainScreenTab = createBottomTabNavigator();
 const AuthStack = createStackNavigator();
 const DiaryStack = createStackNavigator();
 const NewsStack = createStackNavigator();
-
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const headerConfig = {
   headerTitleAlign: 'center',
@@ -31,27 +33,13 @@ const headerConfig = {
   },
 };
 
-const headerConfig_ = {
-  headerTitleAlign: 'center',
-  headerTintColor: '#fff',
-  headerStyle: {
-    backgroundColor: '#7487C5',
-  },
-  headerTitle: <Logo />,
-  headerTitleStyle: {
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerLeft: null,
-};
-
 const DiaryStackComponent = () => {
   return (
     <DiaryStack.Navigator>
       <DiaryStack.Screen
         name="Diary"
         component={Diary}
-        options={headerConfig}
+        options={{...headerConfig, headerLeft: null}}
       />
       <DiaryStack.Screen
         name="DiaryDocu"
@@ -65,12 +53,14 @@ const DiaryStackComponent = () => {
 const NewsStackComponent = () => {
   return (
     <DiaryStack.Navigator>
-      <DiaryStack.Screen name="News" component={News} options={headerConfig_} />
+      <DiaryStack.Screen
+        name="News"
+        component={News}
+        options={{...headerConfig, headerLeft: null}}
+      />
     </DiaryStack.Navigator>
   );
 };
-
-const isLoggedIn = false;
 
 const AppTapCompoment = () => {
   return (
@@ -115,17 +105,21 @@ export const RootNavigator = () => {
       screenOptions={{
         headerShown: false,
       }}>
-      {isLoggedIn ? (
-        <AuthStack.Screen name="Main" component={AppTapCompoment} />
-      ) : (
-        <>
-          <AuthStack.Screen name="SignIn" component={SignIn} />
-          <AuthStack.Screen
-            name="AppTapCompoment"
-            component={AppTapCompoment}
-          />
-        </>
-      )}
+      <AuthStack.Screen name="Loading" component={Loading} />
+      <AuthStack.Screen
+        name="SignIn"
+        component={SignIn}
+        options={() => ({
+          gestureEnabled: false,
+        })}
+      />
+      <AuthStack.Screen
+        name="AppTapCompoment"
+        component={AppTapCompoment}
+        options={() => ({
+          gestureEnabled: false,
+        })}
+      />
     </AuthStack.Navigator>
   );
 };

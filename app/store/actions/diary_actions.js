@@ -1,29 +1,14 @@
 import {GET_DIARIES} from '../types';
-import axios from 'axios';
+import {database} from '../../utils/misc';
 
-export function getDiaries() {
-  const request = axios({
-    method: 'GET',
-    url: 'https://superjoin-admin-test-default-rtdb.asia-southeast1.firebasedatabase.app/diary.json',
-  })
-    .then(res => {
-      const diaryDate = [];
-      for (const key in res.data) {
-        if (res.data[key]) {
-          diaryDate.push({
-            ...res.data[key],
-          });
-        }
-      }
-      return diaryDate;
-    })
-    .catch(err => {
-      console.log('err ', err);
-      return false;
+export function getDiaries(User) {
+  return dispatch => {
+    const url = `diary/${User.auth.userId}`;
+    database.ref(url).on('value', dataSnapShot => {
+      dispatch({
+        type: GET_DIARIES,
+        payload: dataSnapShot.val().filter(item => item !== null),
+      });
     });
-
-  return {
-    type: GET_DIARIES,
-    payload: request,
   };
 }

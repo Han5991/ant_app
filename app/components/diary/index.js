@@ -7,26 +7,41 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  Button,
 } from 'react-native';
 import TextTruncate from 'react-native-text-truncate/src/TextTruncate';
 import {connect} from 'react-redux';
 import {getDiaries} from '../../store/actions/diary_actions';
+import {autoSignIn} from '../../store/actions/user_actions';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {getTokens, removeTokens, setTokens, auth} from '../../utils/misc';
 
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
 class DiaryComponent extends Component {
-  renderDiary = Diaries =>
+  state = {
+    isAuth: true,
+  };
+
+  manageState = isAuth => {
+    this.setState({
+      isAuth,
+    });
+  };
+
+  renderDiary = (Diaries, User) =>
     Diaries.documents
       ? Diaries.documents.map((item, index) => (
           <TouchableOpacity
             key={index}
             onPress={() => {
-              this.props.navigation.navigate('DiaryDocu', {
+              this.props.navigation.push('DiaryDocu', {
                 newDiary: false,
                 diaryData: item,
                 index,
                 id: item.data.id,
+                userId: User.auth.userId,
               });
             }}>
             <View style={styles.diaryContainer}>
@@ -86,7 +101,22 @@ class DiaryComponent extends Component {
       : null;
 
   componentDidMount() {
-    this.props.dispatch(getDiaries());
+    getTokens(value => {
+      if (value[1][1] === null) {
+        this.manageState(false);
+      } else {
+        this.props.dispatch(autoSignIn(value[2][1])).then(a => {
+          if (!this.props.User.auth.token) {
+            this.manageState(false);
+          } else {
+            setTokens(this.props.User.auth, () => {
+              this.manageState(true);
+              this.props.dispatch(getDiaries(this.props.User));
+            });
+          }
+        });
+      }
+    });
   }
 
   checkNextId = Diaries => {
@@ -100,11 +130,63 @@ class DiaryComponent extends Component {
     }
   };
 
+  headerStyle = () => {
+    this.props.navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          style={{flexDirection: 'row', paddingRight: 15, paddingBottom: 5}}
+          onPress={() => {
+            auth
+              .signOut()
+              .then(() => {
+                removeTokens(() => {
+                  this.props.navigation.navigate('SignIn');
+                });
+              })
+              .catch(err => alert('err', err));
+          }}>
+          <Image
+            source={require('../../assets/images/logout.png')}
+            resizeMode="contain"
+            style={{width: 23, height: 23}}
+          />
+        </TouchableOpacity>
+      ),
+    });
+  };
+
   render() {
+    this.headerStyle();
+
     return (
       <View>
-        <ScrollView style={{backgroundColor: '#f0f0f0'}}>
-          {this.renderDiary(this.props.Diaries)}
+        {this.state.isAuth ? (
+          <ScrollView style={{backgroundColor: '#f0f0f0'}}>
+            <View style={{flexDirection: 'column-reverse'}}>
+              {this.renderDiary(this.props.Diaries, this.props.User)}
+            </View>
+          </ScrollView>
+        ) : (
+          <View
+            style={{
+              height: '100%',
+              backgroundColor: '#ccc',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Icon name="emoticon-sad-outline" size={100} color="#48567f" />
+            <Text style={{margin: 20, fontSize: 17}}>
+              로그인이 필요한 화면입니다
+            </Text>
+            <Button
+              title="로그인 / 회원가입"
+              color="#48567f"
+              onPress={() => this.props.navigation.navigate('SignIn')}
+            />
+          </View>
+        )}
+
+        {this.state.isAuth ? (
           <TouchableOpacity
             style={{
               position: 'absolute',
@@ -112,10 +194,11 @@ class DiaryComponent extends Component {
               top: screenHeight * 0.7,
             }}
             onPress={() => {
-              this.props.navigation.navigate('DiaryDocu', {
+              this.props.navigation.push('DiaryDocu', {
                 newDiary: true,
                 index: this.props.Diaries.documents.length,
                 id: this.checkNextId(this.props.Diaries),
+                userId: this.props.User.auth.userId,
               });
             }}>
             <Image
@@ -124,7 +207,7 @@ class DiaryComponent extends Component {
               resizeMode="contain"
             />
           </TouchableOpacity>
-        </ScrollView>
+        ) : null}
       </View>
     );
   }
@@ -159,6 +242,7 @@ const styles = StyleSheet.create({
 function mapStateToProps(state) {
   return {
     Diaries: state.Diaries,
+    User: state.User,
   };
 }
 

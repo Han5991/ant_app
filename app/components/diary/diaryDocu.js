@@ -6,9 +6,14 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import {TextInput} from 'react-native-gesture-handler';
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import Spinner from 'react-native-loading-spinner-overlay';
 import {storage, database} from '../../utils/misc';
 
 class DiaryDocu extends Component {
@@ -54,7 +59,7 @@ class DiaryDocu extends Component {
   getImage = () => {
     storage
       .ref('diaryImage')
-      .child(`index${this.state.diaryData.id}/image.jpg`)
+      .child(`${this.state.userId}/${this.state.diaryData.imagePath}/image.jpg`)
       .getDownloadURL()
       .then(url => {
         this.setState({
@@ -80,11 +85,89 @@ class DiaryDocu extends Component {
     }));
   };
 
-  deleteData = () => {};
+  deleteData = async () => {
+    const id = this.state.diaryData.id;
+    const userId = this.state.userId;
 
-  createData = () => {};
+    const databaseDirectory = `diary/${userId}/${id}`;
+    const databaseRef = database.ref(databaseDirectory).child('data');
 
-  updateData = () => {};
+    const storageDirectory = `diaryImage/${userId}/index${id}`;
+    const storageRef = storage.ref(storageDirectory).child('image.jpg');
+
+    try {
+      await databaseRef.remove();
+      await storageRef
+        .getDownloadURL()
+        .then(() => {
+          storageRef.delete().then(() => {
+            this.props.navigation.push('Diary');
+          });
+        })
+        .catch(() => this.props.navigation.push('Diary'));
+    } catch (error) {
+      alert('삭제 실패', err.message);
+    }
+  };
+
+  createData = async () => {
+    this.setState({
+      isLoading: true,
+    });
+
+    const userId = this.state.userId;
+    const data = this.state.diaryData;
+    const id  = data.id;
+
+    const databaseDirectory = `diary/${userId}/${id}`
+    const databaseRef = database.ref(databaseDirectory)
+    const storageDirectory = `diaryImage/${userId}/index${id}/image.jpg`
+
+    try {
+      await databaseRef.set({data});
+      this.uploadImage(storageDirectory);
+    } catch (err) {
+      this.setState({
+        isLoading: false,
+      });
+      alert(`저장 실패 ${err.message}`);
+    }
+  };
+
+  updateData = () => {
+    this.setState({
+      newDiary: true,
+    });
+  };
+
+  uploadImage = async imageDirectory => {
+    if (this.state.image) {
+      const rep = await fetch(this.state.image);
+      const blob = await rep.blob();
+
+      try {
+        await storage
+          .ref(imageDirectory)
+          .put(blob)
+          .then(() => {
+            this.setState({
+              isLoading: false,
+            });
+            this.props.navigation.push('Diary');
+          });
+      } catch (err) {
+        this.setState({
+          isLoading: false,
+        });
+        alert(`저장 실패 ${err.message}`);
+      }
+    } else {
+      this.setState({
+        isLoading: false,
+      });
+      this.props.navigation.push('Diary');
+    }
+  };
 
   onChangeInput = (item, value) => {
     if (item === 'date') {
@@ -112,168 +195,182 @@ class DiaryDocu extends Component {
   };
 
   render() {
+    
     return (
-      <View style={styles.diaryContainer}>
-        <View style={styles.indexView}>
-          <Text style={styles.indexText}># {this.state.index + 1}</Text>
-        </View>
-
-        <View style={styles.dateView}>
-          <Text style={styles.dateText}>Date : </Text>
-          <View style={styles.dateInputView}>
-            {this.state.newDiary ? (
-              <TextInput
-                value={this.state.diaryData.date}
-                style={{fontSize: 20, paddingTop: 0, paddingBottom: 0}}
-                placeholder="날짜"
-                placeholderTextColor="#777"
-                onChangeText={value => this.onChangeInput('date', value)}
-                editable={true}
-              />
-            ) : (
-              <TextInput
-                value={this.state.diaryData.date}
-                style={{
-                  fontSize: 20,
-                  paddingTop: 0,
-                  paddingBottom: 0,
-                  color: 'gray',
-                }}
-                editable={false}
-              />
-            )}
-          </View>
-        </View>
-
-        <View style={styles.dateView}>
-          <Text style={styles.dateText}>Title: </Text>
-          <View style={styles.dateInputView}>
-            {this.state.newDiary ? (
-              <TextInput
-                value={this.state.diaryData.title}
-                style={{fontSize: 20, paddingTop: 0, paddingBottom: 0}}
-                placeholder="제목"
-                placeholderTextColor="#777"
-                onChangeText={value => this.onChangeInput('title', value)}
-                editable={true}
-              />
-            ) : (
-              <TextInput
-                value={this.state.diaryData.title}
-                style={{
-                  fontSize: 20,
-                  paddingTop: 0,
-                  paddingBottom: 0,
-                  color: 'gray',
-                }}
-                editable={false}
-              />
-            )}
-          </View>
-        </View>
-
-        <View style={styles.descriptionView}>
-          <Text style={styles.dateText}>Description: </Text>
-          <View style={[styles.dateInputView, styles.descriptionInputView]}>
-            <ScrollView>
-              {this.state.newDiary ? (
-                <TextInput
-                  value={this.state.diaryData.description}
-                  style={{fontSize: 20, paddingTop: 0, paddingBottom: 0}}
-                  placeholder="내용"
-                  placeholderTextColor="#777"
-                  onChangeText={value =>
-                    this.onChangeInput('description', value)
-                  }
-                  editable={true}
-                  multiline={true}
-                />
-              ) : (
-                <TextInput
-                  value={this.state.diaryData.description}
-                  style={{
-                    fontSize: 20,
-                    paddingTop: 0,
-                    paddingBottom: 0,
-                    color: 'gray',
-                  }}
-                  editable={false}
-                  multiline={true}
-                />
-              )}
-            </ScrollView>
-          </View>
-        </View>
-
-        <View style={styles.imageView}>
-          <View style={{flex: 10, paddingRight: 15}}>
-            <Text style={styles.dateText}>Image : </Text>
-            <View style={[styles.dateInputView, styles.imageDisplayView]}>
-              {this.state.diaryData.imagePath ? (
-                <Image
-                  source={{uri: this.state.image}}
-                  style={{height: '100%', width: '100%'}}
-                  resizeMode="contain"
-                />
-              ) : null}
+      <KeyboardAvoidingView
+        style={{flex: 1}}
+        behavior={Platform.OS === 'ios' ? 'padding' : null}
+        enabled={true}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.diaryContainer}>
+            <View style={styles.indexView}>
+              <Text style={styles.indexText}># {this.state.index + 1}</Text>
             </View>
-          </View>
-          <View style={{flex: 1, paddingTop: 30, paddingRight: 10}}>
-            {this.state.newDiary ? (
-              <TouchableOpacity onPress={() => this.selectImage()}>
-                <Image
-                  source={require('../../assets/images/image.png')}
-                  resizeMode="contain"
-                  style={{
-                    width: 30,
-                    height: 30
-                  }}
-                />
-              </TouchableOpacity>
-            ) : (
-              <Image
-                source={require('../../assets/images/image.png')}
-                resizeMode="contain"
-                style={{
-                  width: 30,
-                  height: 30,
-                  opacity: 0.2,
-                }}
-              />
-            )}
-          </View>
-        </View>
 
-        <View style={styles.buttonView}>
-          {!this.state.newDiary ? (
-            <>
+            <View style={styles.dateView}>
+              <Text style={styles.dateText}>Date : </Text>
+              <View style={styles.dateInputView}>
+                {this.state.newDiary ? (
+                  <TextInput
+                    value={this.state.diaryData.date}
+                    style={{fontSize: 20, paddingTop: 0, paddingBottom: 0}}
+                    placeholder="날짜"
+                    placeholderTextColor="#777"
+                    onChangeText={value => this.onChangeInput('date', value)}
+                    editable={true}
+                  />
+                ) : (
+                  <TextInput
+                    value={this.state.diaryData.date}
+                    style={{
+                      fontSize: 20,
+                      paddingTop: 0,
+                      paddingBottom: 0,
+                      color: 'gray',
+                    }}
+                    editable={false}
+                  />
+                )}
+              </View>
+            </View>
+
+            <View style={styles.dateView}>
+              <Text style={styles.dateText}>Title: </Text>
+              <View style={styles.dateInputView}>
+                {this.state.newDiary ? (
+                  <TextInput
+                    value={this.state.diaryData.title}
+                    style={{fontSize: 20, paddingTop: 0, paddingBottom: 0}}
+                    placeholder="제목"
+                    placeholderTextColor="#777"
+                    onChangeText={value => this.onChangeInput('title', value)}
+                    editable={true}
+                  />
+                ) : (
+                  <TextInput
+                    value={this.state.diaryData.title}
+                    style={{
+                      fontSize: 20,
+                      paddingTop: 0,
+                      paddingBottom: 0,
+                      color: 'gray',
+                    }}
+                    editable={false}
+                  />
+                )}
+              </View>
+            </View>
+
+            <View style={styles.descriptionView}>
+              <Text style={styles.dateText}>Description: </Text>
+              <View style={[styles.dateInputView, styles.descriptionInputView]}>
+                <ScrollView>
+                  {this.state.newDiary ? (
+                    <TextInput
+                      value={this.state.diaryData.description}
+                      style={{fontSize: 20, paddingTop: 0, paddingBottom: 0}}
+                      placeholder="내용"
+                      placeholderTextColor="#777"
+                      onChangeText={value =>
+                        this.onChangeInput('description', value)
+                      }
+                      editable={true}
+                      multiline={true}
+                    />
+                  ) : (
+                    <TextInput
+                      value={this.state.diaryData.description}
+                      style={{
+                        fontSize: 20,
+                        paddingTop: 0,
+                        paddingBottom: 0,
+                        color: 'gray',
+                      }}
+                      editable={false}
+                      multiline={true}
+                    />
+                  )}
+                </ScrollView>
+              </View>
+            </View>
+
+            <View style={styles.imageView}>
+              <View style={{flex: 10, paddingRight: 15}}>
+                <Text style={styles.dateText}>Image : </Text>
+                <View style={[styles.dateInputView, styles.imageDisplayView]}>
+                  {this.state.diaryData.imagePath ? (
+                    <Image
+                      source={{uri: this.state.image}}
+                      style={{height: '100%', width: '100%'}}
+                      resizeMode="contain"
+                    />
+                  ) : null}
+                </View>
+              </View>
+              <View style={{flex: 1, paddingTop: 30, paddingRight: 10}}>
+                {this.state.newDiary ? (
+                  <TouchableOpacity onPress={() => this.selectImage()}>
+                    <Image
+                      source={require('../../assets/images/image.png')}
+                      resizeMode="contain"
+                      style={{
+                        width: 30,
+                        height: 30,
+                      }}
+                    />
+                  </TouchableOpacity>
+                ) : (
+                  <Image
+                    source={require('../../assets/images/image.png')}
+                    resizeMode="contain"
+                    style={{
+                      width: 30,
+                      height: 30,
+                      opacity: 0.2,
+                    }}
+                  />
+                )}
+              </View>
+            </View>
+
+            <View style={styles.buttonView}>
+              {!this.state.newDiary ? (
+                <>
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                      style={{fontSize: 15, padding: 5}}
+                      onPress={() => this.deleteData()}>
+                      <Text>삭제</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                      style={{fontSize: 15, padding: 5}}
+                      onPress={() => this.updateData()}>
+                      <Text>수정</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : null}
+
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
                   style={{fontSize: 15, padding: 5}}
-                  onPress={() => this.deleteData()}>
-                  <Text>삭제</Text>
+                  onPress={() => this.createData()}>
+                  <Text>완료</Text>
                 </TouchableOpacity>
               </View>
-
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={{fontSize: 15, padding: 5}}
-                  onPress={() => this.updateData()}>
-                  <Text>수정</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          ) : null}
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={{fontSize: 15, padding: 5}}
-              onPress={() => this.createData()}>
-              <Text>완료</Text>
-            </TouchableOpacity>
+            </View>
+            <Spinner
+              visible={this.state.isLoading}
+              textContent={'다이어리 업로드 중...'}
+              overlayColor={'rgba(0,0,0,0.6)'}
+              textStyle={{color: '#fff'}}
+            />
           </View>
-        </View>
-      </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     );
   }
 }
@@ -294,7 +391,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   dateView: {
-    //flex: 1,
+    flex: 1,
     height: 40,
     paddingLeft: 15,
     paddingRight: 15,

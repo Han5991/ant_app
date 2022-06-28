@@ -6,14 +6,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import firebase from 'firebase';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDNM8kPBFUkXeLk7O_nvols98KYOQpoxHM",
-  authDomain: "superjoin-admin-test.firebaseapp.com",
-  databaseURL: "https://superjoin-admin-test-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "superjoin-admin-test",
-  storageBucket: "superjoin-admin-test.appspot.com",
-  messagingSenderId: "450612815386",
-  appId: "1:450612815386:web:69f2ac4cb79141b53d93a3",
-  measurementId: "G-B3QGYY51M7"
+  apiKey: 'AIzaSyDNM8kPBFUkXeLk7O_nvols98KYOQpoxHM',
+  authDomain: 'superjoin-admin-test.firebaseapp.com',
+  databaseURL:
+    'https://superjoin-admin-test-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'superjoin-admin-test',
+  storageBucket: 'superjoin-admin-test.appspot.com',
+  messagingSenderId: '450612815386',
+  appId: '1:450612815386:web:69f2ac4cb79141b53d93a3',
+  measurementId: 'G-B3QGYY51M7',
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -62,7 +63,9 @@ const removeTokens = async callBack => {
     ]).then(() => {
       callBack();
     });
-  } catch (e) {}
+  } catch (e) {
+    
+  }
 };
 
-export {getTokens, setTokens, removeTokens}
+export {getTokens, setTokens, removeTokens};
