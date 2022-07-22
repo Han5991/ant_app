@@ -9,11 +9,10 @@ class App extends Component {
   render() {
     return (
       <NavigationContainer>
-        <RootNavigator/>
+        <RootNavigator />
       </NavigationContainer>
     );
   }
 }
 
-const styles = StyleSheet.create({});
 export default App;
